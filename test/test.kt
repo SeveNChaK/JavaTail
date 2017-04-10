@@ -5,7 +5,7 @@ import java.io.File
 import java.nio.charset.Charset
 
 
-class test{
+class test {
 
     private fun assertFileContent(nameOut: String, nameIn: String) {
         val fileExpected = File(nameOut)
@@ -32,9 +32,6 @@ class test{
         TailLauncher.main(inputString)
         assertFileContent("files/output.txt", "files/outputExpected3.txt")
     }
-
-
-
 
 
 }

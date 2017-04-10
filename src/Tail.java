@@ -39,7 +39,7 @@ public class Tail {
                         break;
                     } else {
                         reader.reset();
-                        if (reader.readLine().equals("/end")){
+                        if (reader.readLine().equals("/end")) {
                             markEnd = true;
                             if (!secondPart.isEmpty()) {
                                 final Integer num = charNumber - firstPart.size();
@@ -47,8 +47,7 @@ public class Tail {
                             }
                             result.addAll(firstPart);
                             break;
-                        }
-                        else reader.reset();
+                        } else reader.reset();
                     }
                     symbol = reader.read();
                     if (symbol == 10 || symbol == 13) continue;
