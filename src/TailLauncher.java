@@ -3,20 +3,17 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
-import java.io.BufferedWriter;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.util.List;
 
 public class TailLauncher {
-    @Option(name="-c", metaVar="num", usage="Sets the number of charactes to print")
+    @Option(name = "-c", metaVar = "num", usage = "Sets the number of charactes to print")
     private Integer charNumber = -1;
 
-    @Option(name="-n", metaVar="num", usage="Sets the number of strings to print")
+    @Option(name = "-n", metaVar = "num", usage = "Sets the number of strings to print")
     private Integer strNumber = -1;
 
-    @Option(name="-o", metaVar="ofile", usage="Sets the output file")
+    @Option(name = "-o", metaVar = "ofile", usage = "Sets the output file")
     private String outputFile = "";
 
     @Argument(metaVar = "InputName", usage = "Input file name")
@@ -36,47 +33,58 @@ public class TailLauncher {
             parser.printUsage(System.err);
             return;
         }
+
         try {
             if (charNumber != -1 && strNumber != -1) throw new IllegalArgumentException();
         } catch (IllegalArgumentException e) {
             System.err.println("Check format cmd line");
             return;
         }
+
         if (charNumber == -1 && strNumber == -1) {
-            charNumber = 10;
-            strNumber = 0;
+            charNumber = 0;
+            strNumber = 10;
         }
-        Tail tail = new Tail(charNumber, strNumber, inputFiles, outputFile);
+        Tail tail = new Tail(charNumber, strNumber);
+
+
         try {
-            FileOutputStream intermadiateOutputStream = new FileOutputStream(outputFile);
-            try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(intermadiateOutputStream))) {
-                writer.write(""); //Используется чтобы очистить выходной файл после предыдущей работы. не нашел ничего получше:)
-                writer.close();
-            }
-            intermadiateOutputStream.close();
-            for (int i=0; i<inputFiles.size(); i++){
-                FileOutputStream outputStream = new FileOutputStream(outputFile, true);
-                try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream))) {
-                    writer.write(inputFiles.get(i) + ":");
-                    writer.newLine();
+            OutputStream out;
+            if (!outputFile.equals("")) {
+                FileOutputStream intermadiateOutputStream = new FileOutputStream(outputFile);
+                try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(intermadiateOutputStream))) {
+                    writer.write(""); //Используется чтобы очистить выходной файл после предыдущей работы. не нашел ничего получше:)
                     writer.close();
                 }
-                outputStream.close();
-                tail.writeTail(inputFiles.get(i), outputFile);
+                intermadiateOutputStream.close();
+                out = new FileOutputStream(outputFile, true);
+            } else {
+                out = System.out;
             }
-            System.out.println("Done. Check file: " + outputFile);
+
+            if (inputFiles != null) {
+                for (int i = 0; i < inputFiles.size(); i++) {
+                    FileInputStream in = new FileInputStream(inputFiles.get(i));
+                    if (!outputFile.equals("")) {
+                        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputFile, true)));
+                        writer.write(inputFiles.get(i) + ":");
+                        writer.newLine();
+                        writer.close();
+                    } else {
+                        System.out.println(inputFiles.get(i) + ":");
+                    }
+                    tail.writeTail(in, out);
+                }
+            } else {
+                InputStream in = System.in;
+                System.out.println("Write \"/end\" to end the program");
+                tail.writeTail(in, out);
+            }
+            System.out.println("Done.");
+
         } catch (IOException e) {
             System.err.println(e.getMessage());
             return;
         }
-
-
-
-
-
-
-
-
-
     }
 }

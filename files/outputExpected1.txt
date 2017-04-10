@@ -1,0 +1,9 @@
+files/input1.txt:
+нтру.
+
+files/input2.txt:
+выми.
+
+files/input3.txt:
+тых).
+
