@@ -8,10 +8,10 @@ import java.util.List;
 
 public class TailLauncher {
     @Option(name = "-c", metaVar = "num", usage = "Sets the number of charactes to print")
-    private Integer charNumber = -1;
+    private int charNumber = -1;
 
     @Option(name = "-n", metaVar = "num", usage = "Sets the number of strings to print")
-    private Integer strNumber = -1;
+    private int strNumber = -1;
 
     @Option(name = "-o", metaVar = "ofile", usage = "Sets the output file")
     private String outputFile = "";
@@ -34,9 +34,7 @@ public class TailLauncher {
             return;
         }
 
-        try {
-            if (charNumber != -1 && strNumber != -1) throw new IllegalArgumentException();
-        } catch (IllegalArgumentException e) {
+        if (charNumber != -1 && strNumber != -1) {
             System.err.println("Check format cmd line");
             return;
         }
@@ -49,39 +47,35 @@ public class TailLauncher {
 
 
         try {
-            OutputStream out;
+            BufferedWriter out;
             if (!outputFile.equals("")) {
-                FileOutputStream intermadiateOutputStream = new FileOutputStream(outputFile);
-                try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(intermadiateOutputStream))) {
-                    writer.write(""); //Используется чтобы очистить выходной файл после предыдущей работы. не нашел ничего получше:)
-                    writer.close();
-                }
-                intermadiateOutputStream.close();
-                out = new FileOutputStream(outputFile, true);
+                File output = new File(outputFile);
+                if (output.isFile()) output.delete();
+                out = new BufferedWriter(new FileWriter(outputFile));
             } else {
-                out = System.out;
+                out = new BufferedWriter(new OutputStreamWriter(System.out));
             }
 
+            BufferedReader in;
             if (inputFiles != null) {
                 for (int i = 0; i < inputFiles.size(); i++) {
-                    FileInputStream in = new FileInputStream(inputFiles.get(i));
-                    if (!outputFile.equals("")) {
-                        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputFile, true)));
-                        writer.write(inputFiles.get(i) + ":");
-                        writer.newLine();
-                        writer.close();
-                    } else {
-                        System.out.println(inputFiles.get(i) + ":");
+                    in = new BufferedReader(new FileReader(inputFiles.get(i)));
+                    out.write(inputFiles.get(i) + ":");
+                    out.newLine();
+                    for (String j : tail.getTail(in, out)) {
+                        out.write(j);
                     }
-                    tail.writeTail(in, out);
+                    out.newLine();
                 }
             } else {
-                InputStream in = System.in;
-                System.out.println("Write \"/end\" to end the program");
-                tail.writeTail(in, out);
+                in = new BufferedReader(new InputStreamReader(System.in));
+                System.out.println("Write \"Ctrl+C\" to end the program");
+                for (String j : tail.getTail(in, out)) {
+                    out.write(j);
+                }
             }
+            out.close();
             System.out.println("Done.");
-
         } catch (IOException e) {
             System.err.println(e.getMessage());
             return;
